@@ -1,0 +1,106 @@
+﻿@page "/PersonsListView"
+@using LoginExample.Data
+@using System.Collections
+@using LoginExample.Data.Impl
+@inject IPersons PersonsService
+
+<h3>Adults list</h3>
+<p>
+    Filter by adult id: <input type="number" @oninput="@((arg)=>FilterByID(arg))"  
+    style="width: 50px"/>
+</p>
+
+@if (personsList == null)
+{
+    <p>Page is loading...</p>
+}
+else if (!personsList.Any())
+{
+    <p>Table is Empty</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>First name</th>
+            <th>Last name</th>
+            <th>Hair color</th>
+            <th>Eye color</th>
+            <th>Age</th>
+            <th>Weight</th>
+            <th>Height</th>
+            <th>Job</th>
+            <th>Sex</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (Adult person in personsToShow)
+        {
+            <tr>
+                <td>@person.ID</td>
+                <td>@person.firstName</td>
+                <td>@person.lastName</td>
+                <td>@person.hairColor</td>
+                <td>@person.eyeColor</td>
+                <td>@person.age</td>
+                <td>@person.weight</td>
+                <td>@person.height</td>
+                <td>@person.job</td>
+                <td>@person.sex</td>
+                <td>
+                    <button @onclick="@(()=>removePerson(person.ID))">
+                        <i class="oi oi-trash" style="color: red"/>
+                    </button>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+
+
+
+
+
+
+@code {
+
+    private IList<Adult> personsToShow;
+    private IList<Adult> personsList;
+
+    private int? filterById;
+
+    private void ExecuteFilter()
+    {
+        personsToShow = personsList.Where(p =>
+            filterById != null && p.ID == filterById || filterById == null).ToList();
+    }
+
+    private void FilterByID(ChangeEventArgs evt)
+    {
+        filterById = null;
+        try
+        {
+            filterById = int.Parse(evt.Value.ToString());
+        }
+        catch (Exception e){}
+        ExecuteFilter();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        personsList = await PersonsService.GetPersons();
+        personsToShow = personsList;
+    }
+
+    private void removePerson(int id)
+    {
+        Adult toRemove = personsList.First(p => p.ID == id);
+        PersonsService.RemovePerson(id);
+        personsList.Remove(toRemove);
+    }
+
+}
